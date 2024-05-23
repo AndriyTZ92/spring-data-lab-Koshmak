@@ -1,59 +1,38 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    kotlin("jvm") version "1.9.22"
-    kotlin("plugin.noarg") version "1.9.22"
-    kotlin("plugin.spring") version "1.9.22"
-    application
+    kotlin("jvm") version "1.8.20"
+    kotlin("plugin.spring") version "1.8.20"
+    id("org.springframework.boot") version "3.0.6"
+    id("io.spring.dependency-management") version "1.1.0"
+    id("org.jetbrains.kotlin.plugin.jpa") version "1.8.20"
 }
 
-group = "ua.kpi.its.lab.data"
-version = "1.0-SNAPSHOT"
+group = "ua.kpi.its.lab"
+version = "0.0.1-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // Needed for Spring Data
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.22")
-
-    implementation("org.springframework:spring-context:6.1.4")
-    implementation("org.springframework.data:spring-data-jpa:3.2.3")
-
-    // In Memory DB
-    implementation("org.hsqldb:hsqldb:2.7.2")
-    // Hibernate
-    implementation("org.hibernate.orm:hibernate-core:6.4.4.Final")
-
-    implementation("org.apache.logging.log4j:log4j-core:2.23.0")
-    implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.23.0")
-
-    testImplementation(kotlin("test", "1.9.22"))
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    runtimeOnly("com.h2database:h2")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
-tasks.test {
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "17"
+    }
+}
+
+tasks.withType<Test> {
     useJUnitPlatform()
 }
-kotlin {
-    jvmToolchain(17)
-}
-application {
-    mainClass.set("ua.kpi.its.lab.data.MainKt")
-}
-
-// Configures the noArg plugin to generate zero-argument constructors for JPA entities,
-// which is necessary for entity instantiation by Hibernate.
-noArg {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
-    invokeInitializers = true // Ensures that property initializers are called in the generated constructors.
-}
-
-// Configures the allOpen plugin to prevent Kotlin from marking classes as final if they are annotated
-// with JPA annotations. This is crucial for enabling runtime proxying and AOP-based enhancements.
-allOpen {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
-}
-
